@@ -1,4 +1,5 @@
-from app import db,login
+from app import db,login, bnet
+from app.data import CLASS, RACE
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
@@ -18,13 +19,14 @@ guild_followers = db.Table('guild_followers',
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
+
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
+    about_me = db.Column(db.String(140))
+
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     rosters = db.relationship('Roster', backref='owner', lazy='dynamic')
-    about_me = db.Column(db.String(140))
-    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     followed = db.relationship(
         'User', secondary=followers,
         primaryjoin=(followers.c.follower_id == id),
@@ -35,6 +37,8 @@ class User(UserMixin, db.Model):
         'Guild', secondary=guild_followers,
         backref=db.backref('followers', lazy='dynamic'), lazy='dynamic'
     )
+
+    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -102,10 +106,13 @@ def load_user(id):
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+
     body = db.Column(db.String(140))
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
     creation_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     update_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __repr__(self):
         return '<Post {}>'.format(self.body)
@@ -119,16 +126,24 @@ roster_member = db.Table('roster_member',
 
 class Roster(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+
     name = db.Column(db.String(24))
     region = db.Column(db.String(24))
-    creation_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    update_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    ilvl_average = db.Column(db.Float)
+
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     members = db.relationship(
         'Character', secondary=roster_member,
         backref=db.backref('rosters', lazy='dynamic'),
         lazy='dynamic'
     )
+
+    def __repr__(self):
+        return '<Roster {}:{}>'.format(self.region, self.name)
+
+    creation_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    update_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
     def add_member(self, character):
         if not self.is_in_roster(character):
@@ -145,12 +160,22 @@ class Roster(db.Model):
 
 class Guild(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+
     name = db.Column(db.String(24))
     realm = db.Column(db.String(24))
     region = db.Column(db.String(24))
+
+    armory_link = db.Column(db.String(280))
+    wowprogress_link = db.Column(db.String(280))
+
+    members = db.relationship('Character', backref='guild', lazy='dynamic')
+
     creation_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     update_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    members = db.relationship('Character', backref='guild', lazy='dynamic')
+    # TODO Voir comment stocker le progress de la guilde.
+
+    def __repr__(self):
+        return '<Guild {}:{}:{}>'.format(self.region, self.realm, self.name)
 
     def add_member(self, character):
         self.members.append(character)
@@ -158,24 +183,91 @@ class Guild(db.Model):
     def del_member(self, character):
         self.members.remove(character)
 
+    # TODO En faire une task.
     def refresh(self):
         # TODO Coder la fonction
+        # Refresh les members
+        # Post_Update a chaque leave / down / join
+        # Update wowprogress_link et armory_link
+        # Update la update_date
         pass
 
-    def add_leaver(self, character):
-        # TODO Creer un GuildPost affichant le leaver
-        pass
-
-    def add_joiner(self, character):
-        # TODO Creer un GuildPost affichant le joiner
+    def post_update(self, character):
+        # TODO Creer un GuildPost affichant le leaver/joiner/downdunboss
         pass
 
 
 class Character(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+
     name = db.Column(db.String(24))
     realm = db.Column(db.String(24))
     region = db.Column(db.String(24))
-    creation_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    update_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    classe = db.Column(db.String(24))
+    race = db.Column(db.String(24))
+
+    level = db.Column(db.Integer)
+    ilevel = db.Column(db.Float)
+    rio_score = db.Column(db.Integer)
+
     guild_id = db.Column(db.Integer, db.ForeignKey('guild.id'))
+
+    armory_link = db.Column(db.String(280))
+    rio_link = db.Column(db.String(280))
+    wlog_link = db.Column(db.String(280))
+
+    creation_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    update_date = db.Column(db.DateTime, index=True)
+
+    def __repr__(self):
+        return '<Character {}:{}:{}>'.format(self.region, self.realm, self.name)
+
+    # TODO Ajouter en tache de fond.
+    def refresh(self, index=0, roster=False):
+
+        if index > 3:
+            return 404
+        r = bnet.get_player(self.server, self.name, "items")
+        if r.status_code != 200:
+            return self.refresh(index+1)
+        r = r.json()
+        self.ilevel = int(r["items"]['averageItemLevelEquipped'])
+        if roster:
+            return
+        self.classe = CLASS[int(r["class"])]
+        self.race = RACE[int(r["race"])]
+        self.armory_link = "https://worldofwarcraft.com/fr-fr/character/{}/{}".format(
+            self.server,
+            self.name
+        )
+        url = 'https://raider.io/api/v1/characters/profile?region={}&realm={}&name={}&fields=mythic_plus_scores'.format(
+            bnet.region,
+            self.server,
+            self.name
+        )
+        r = bnet.get(url)
+        if r.status_code != 200:
+            self.rio_score = 0
+        else:
+            r = r.json()
+            self.rio_score = r["mythic_plus_scores"]["all"]
+            self.rio_link = r["profile_url"]
+        self.update_date = datetime.now()
+        # TODO Ajouter le check de MM+.
+        # TODO Ajouter le lien warcraftlogs
+
+    # def get_msg(self, leaves):
+    #     if leaves:
+    #         mod = 'left'
+    #     else:
+    #         mod = 'joined'
+    #     msg = 'Player {} {} {}.\n' \
+    #           'Ilvl : {}\n' \
+    #           'Rio Score : {}\n' \
+    #           'Class : {}\n' \
+    #           'Race : {} \n' \
+    #           'Armory : <{}>\n' \
+    #           'RaiderIo : <{}>\n'.format(self.name, mod, self.guild, self.ilvl, self.raiderio, self.classe, self.race,
+    #                                      self.armory, self.raiderio_link)
+    #     return msg

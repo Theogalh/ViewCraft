@@ -1,0 +1,38 @@
+CLASS = {
+    1: "Warrior",
+    2: "Paladin",
+    3: "Hunter",
+    4: "Rogue",
+    5: "Priest",
+    6: "Death Knight",
+    7: "Shaman",
+    8: "Mage",
+    9: "Warlock",
+    10: "Monk",
+    11: "Druid",
+    12: "Demon Hunter"
+}
+
+RACE = {
+    1: "Humain",
+    2: "Orc",
+    3: "Nain",
+    4: "Elfe de la nuit",
+    5: "Mort vivant",
+    6: "Tauren",
+    7: "Gnome",
+    8: "Troll",
+    9: "Gobelin",
+    10: "Elfe de sang",
+    11: "Draenei",
+    22: "Worgen",
+    24: "Pandaren N",
+    25: "Pandaren A",
+    26: "Pandaren H",
+    27: "Sacrenuit",
+    28: "Tauren de Haut Roc",
+    29: "Elfe du vide",
+    30: "Draenei Sancteforge",
+    34: "Nain sombrefer",
+    36: "Orc mag'har",
+}

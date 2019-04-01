@@ -9,6 +9,7 @@ from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_babel import Babel, _
 from logging.handlers import SMTPHandler, RotatingFileHandler
+from .utils.bnetrequests import BnetRequests
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -19,6 +20,7 @@ login.login_view = 'login'
 bootstrap = Bootstrap(app)
 moment = Moment(app)
 babel = Babel(app)
+bnet = BnetRequests(app)
 
 
 @babel.localeselector

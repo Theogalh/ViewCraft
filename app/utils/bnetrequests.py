@@ -2,12 +2,12 @@ import requests
 
 
 class BnetRequests:
-    def __init__(self, id, secret, region, locale):
-        self.id = id
-        self.secret = secret
+    def __init__(self, app):
+        self.id = app.config['BNET_ID']
+        self.secret = app.config['BNET_SECRET']
         self.token = None
-        self.locale = locale
-        self.region = region
+        self.locale = app.config['BNET_LOCALE']
+        self.region = app.config['BNET_REGION']
         self.get_token()
         self.headers = {'Authorization': 'Bearer {}'.format(self.token)}
 
@@ -35,7 +35,7 @@ class BnetRequests:
         req = self.get(url)
         return req
 
-    def get_player(self, server, charName, field):
+    def get_character(self, server, charName, field):
         url = 'https://{}.api.blizzard.com/wow/character/{}/{}?fields={}&locale={}'.format(self.region,
                                                                                            server,
                                                                                            charName,

@@ -23,3 +23,10 @@ class Config(object):
     POSTS_PER_PAGE = 25
     LANGUAGES = ['en', 'fr']
 
+    BNET_ID = os.environ.get('BNET_ID') or None
+    BNET_SECRET = os.environ.get('BNET_SECRET') or None
+    BNET_REGION = os.environ.get('BNET_REGION') or 'eu'
+    BNET_LOCALE = os.environ.get('BNET_LOCALE') or 'fr_FR'
+
+
+
