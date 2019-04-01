@@ -20,7 +20,8 @@ login.login_view = 'login'
 bootstrap = Bootstrap(app)
 moment = Moment(app)
 babel = Babel(app)
-bnet = BnetRequests(app)
+# TODO Integrer BnetRequests
+bnet = None
 
 
 @babel.localeselector
