@@ -17,9 +17,9 @@ class Config(object):
     MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'smtp.gmail.com'
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 25)
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', None) is not None
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME') or 'viewcraft@gmail.com'
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or 'test'
-    ADMINS = ['viewcraft@gmail.com']
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME') or 'theogalh.dev@gmail.com'
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or ',=/8PraR}s=3'
+    ADMINS = ['theogalh.dev@gmail.com']
     POSTS_PER_PAGE = 25
     LANGUAGES = ['en', 'fr']
 
