@@ -79,7 +79,6 @@ def create_app(config_class=Config):
         app.logger.setLevel(logging.INFO)
 
     app.logger.info('ViewCraft startup')
-
     return app
 
 

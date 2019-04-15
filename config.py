@@ -15,10 +15,11 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'smtp.gmail.com'
-    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 25)
-    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', None) is not None
+    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', True) is not None
+    MAIL_USE_SSL = False
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME') or 'theogalh.dev@gmail.com'
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or ',=/8PraR}s=3'
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or 'toto'
     ADMINS = ['theogalh.dev@gmail.com']
     POSTS_PER_PAGE = 25
     LANGUAGES = ['en', 'fr']

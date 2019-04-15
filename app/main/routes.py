@@ -5,6 +5,7 @@ from app.main.forms import EditProfileForm, PostForm
 from flask_login import current_user, login_user, logout_user, login_required
 from app.models import User, Post
 from datetime import datetime
+from app.email import send_email
 
 
 @bp.route('/', methods=['GET', 'POST'])
@@ -67,6 +68,11 @@ def edit_profile():
         current_user.about_me = form.about_me.data
         db.session.commit()
         flash('Your change have been saved.')
+        send_email(('[ViewCraft] Edit Your Profile'),
+                   sender=current_app.config['ADMINS'][0],
+                   recipients=[current_user.email],
+                   text_body=render_template('email/startup.txt'),
+                   html_body=render_template('email/startup.html'))
         return redirect(url_for('main.edit_profile'))
     elif request.method == 'GET':
         form.username.data = current_user.username
