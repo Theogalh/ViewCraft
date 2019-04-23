@@ -36,7 +36,7 @@ def explore():
     )
     next_url = url_for('main.index', page=posts.next_num) if posts.has_next else None
     prev_url = url_for('main.index', page=posts.prev_num) if posts.has_prev else None
-    return render_template('main.index.html', title='Explore', posts=posts.items,
+    return render_template('index.html', title='Explore', posts=posts.items,
                            next_url=next_url, prev_url=prev_url)
 
 
@@ -93,7 +93,7 @@ def follow(username):
     current_user.follow(user)
     db.session.commit()
     flash('You are following {}!'.format(username))
-    return redirect(url_for('user', username=username))
+    return redirect(url_for('main.user', username=username))
 
 
 @bp.route('/follow/<username>')
@@ -109,7 +109,7 @@ def unfollow(username):
     current_user.unfollow(user)
     db.session.commit()
     flash('You are unfollowing {}!'.format(username))
-    return redirect(url_for('user', username=username))
+    return redirect(url_for('main.user', username=username))
 
 
 @bp.before_request
