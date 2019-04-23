@@ -1,7 +1,7 @@
 from app.api import bp
-from flask import jsonify, request, url_for, g
+from flask import jsonify, request, url_for
 from app.models import User
-from app.api.errors import bad_request
+from app.api.errors import bad_request, error_response
 from app import db
 from app.api.auth import token_auth
 
@@ -74,7 +74,7 @@ def create_user():
 @token_auth.login_required
 def update_user(id):
     if g.current_user.id != id:
-        return bad_request("U can't modify other users.")
+        return error_response(403, 'U cannot modify other profile')
     user = User.query_or_404(id)
     data = request.get_json() or {}
     if 'username' in data and data['username'] != user.username and \

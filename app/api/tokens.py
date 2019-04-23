@@ -13,5 +13,8 @@ def get_token():
 
 
 @bp.route('/tokens', methods=['DELETE'])
+@token_auth.login_required
 def revoke_token():
-    pass
+    g.current_user.revoke_token()
+    db.session.commit()
+    return '', 204
