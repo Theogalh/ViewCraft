@@ -2,7 +2,15 @@ import requests
 
 
 class BnetRequests:
-    def __init__(self, app):
+    def __init__(self):
+        self.id = None
+        self.secret = None
+        self.token = None
+        self.locale = None
+        self.region = None
+        self.headers = None
+
+    def init_app(self, app):
         self.id = app.config['BNET_ID']
         self.secret = app.config['BNET_SECRET']
         self.token = None

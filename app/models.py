@@ -7,6 +7,8 @@ from hashlib import md5
 from flask import url_for
 import base64
 import os
+import redis
+import rq
 
 
 followers = db.Table('followers',
@@ -343,3 +345,17 @@ class Character(db.Model):
     #           'RaiderIo : <{}>\n'.format(self.name, mod, self.guild, self.ilvl, self.raiderio, self.classe, self.race,
     #                                      self.armory, self.raiderio_link)
     #     return msg
+
+# class Task(db.Model):
+#     id = db.Column(db.String(36), primary_key=True)
+#     name = db.Column(db.String(128), index=True)
+#     description = db.Column(db.String(128))
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+#     complete = db.Column(db.Boolean, default=False)
+#
+#     def get_rq_job(self):
+#         try:
+#             rq_job = rq_job.Job.fetch(self.id, connection=current_app.redis)
+#         except (redis.exceptions.RedisError, rq.exceptions.NoSuchJobError):
+#             return None
+#         return rq_job
