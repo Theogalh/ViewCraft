@@ -12,6 +12,7 @@ from flask_babel import Babel, _
 from logging.handlers import SMTPHandler, RotatingFileHandler
 from .utils.bnetrequests import BnetRequests
 
+# Init Flask's module.
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -27,6 +28,11 @@ bnet = BnetRequests()
 
 
 def create_app(config_class=Config):
+    """
+    Flask Application Factory
+    :param config_class: Configuration Class.
+    :return: A Flask Application.
+    """
     app = Flask(__name__)
     app.config.from_object(config_class)
 

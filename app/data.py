@@ -36,3 +36,17 @@ RACE = {
     34: "Nain sombrefer",
     36: "Orc mag'har",
 }
+
+REALM_CONNECTED = [
+    ['Eitrigg', 'Krasus'],
+    ['Suramar', 'Medivh'],
+    ['Arak-arahm', 'Throk\'Feroth', 'Ragharroth', 'Kael\'Thas'],
+    ['Illidan', 'Naxxramas', 'Arathi', 'Temple noir'],
+    ['Sargeras', 'Garona', 'Ner\'zhul'],
+    ['Eldre\'Thalas', 'Cho\'gall', 'Sinstralis'],
+    ['La croisage écarlate', 'Culte de la Rive noire', 'Conseil des Ombres'],
+    ['Elune', 'Varimathras'],
+    ['Marécage de Zangar', 'Dalaran'],
+    ['Uldaman', 'Drek\'Thar'],
+    ['Chants éternels', 'Vol\'jin'],
+]

@@ -21,7 +21,7 @@ class BnetRequests:
 
     def get_token(self):
         body_params = {'grant_type': 'client_credentials'}
-        url = 'https://eu.battle.net/oauth/token'.format(self.region)
+        url = 'https://{}.battle.net/oauth/token'.format(self.region)
         req = requests.post(url, data=body_params, auth=(self.id, self.secret))
         if req.status_code != 200:
             raise Exception(ConnectionRefusedError)

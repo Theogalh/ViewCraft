@@ -1,5 +1,5 @@
 from app.api import bp
-from flask import jsonify, request, url_for
+from flask import jsonify, request, url_for, g
 from app.models import User
 from app.api.errors import bad_request, error_response
 from app import db
@@ -12,10 +12,33 @@ CREATING_FIELDS = [
 ]
 
 
-@bp.route('/users/<int:id>', methods=['GET'])
+@bp.route('/users/<string:name>', methods=['GET'])
 @token_auth.login_required
-def get_user(id):
-    return jsonify(User.query.get_or_404(id).to_dict())
+def get_user(name):
+    user = User.query.filter_by(username=name).first()
+    if not user:
+        return error_response(404, 'User {} does not exist.'.format(name))
+    return jsonify(user.to_dict())
+
+
+@bp.route('/users/<string:name>', methods=['PUT'])
+@token_auth.login_required
+def update_user(name):
+    if g.current_user.name != name:
+        return error_response(403, 'U cannot modify other profile')
+    user = User.query.filter_by(username=name).first()
+    if not user:
+        return error_response(404, 'User {} does not exist.'.format(name))
+    data = request.get_json() or {}
+    if 'username' in data and data['username'] != user.username and \
+            User.query.filter_by(username=data['username']).first():
+        return bad_request('please use a different username')
+    if 'email' in data and data['email'] != user.email and \
+            User.query.filter_by(email=data['email']).first():
+        return bad_request('please use a different email address')
+    user.from_dict(data, new_user=False)
+    db.session.commit()
+    return jsonify(user.to_dict())
 
 
 @bp.route('/users', methods=['GET'])
@@ -27,20 +50,24 @@ def get_users():
     return jsonify(data)
 
 
-@bp.route('/users/<int:id>/followers', methods=['GET'])
+@bp.route('/users/<string:name>/followers', methods=['GET'])
 @token_auth.login_required
-def get_followers(id):
-    user = User.query.get_or_404(id)
+def get_followers(name):
+    user = User.query.filter_by(username=name).first()
+    if not user:
+        return error_response(404, 'User {} does not exist.'.format(name))
     data = []
     for followers in user.followers.all():
         data.append(followers.to_dict())
     return jsonify(data)
 
 
-@bp.route('/users/<int:id>/followed', methods=['GET'])
+@bp.route('/users/<string:name>/followed', methods=['GET'])
 @token_auth.login_required
-def get_followed(id):
-    user = User.query.get_or_404(id)
+def get_followed(name):
+    user = User.query.filter_by(username=name).first()
+    if not user:
+        return error_response(404, 'User {} does not exist.'.format(name))
     data = []
     for followed in user.followed.all():
         data.append(followed.to_dict())
@@ -68,21 +95,3 @@ def create_user():
     response.headers['Location'] = url_for('api.get_user', id=user.id)
 
     return response
-
-
-@bp.route('/users/<int:id>', methods=['PUT'])
-@token_auth.login_required
-def update_user(id):
-    if g.current_user.id != id:
-        return error_response(403, 'U cannot modify other profile')
-    user = User.query_or_404(id)
-    data = request.get_json() or {}
-    if 'username' in data and data['username'] != user.username and \
-            User.query.filter_by(username=data['username']).first():
-        return bad_request('please use a different username')
-    if 'email' in data and data['email'] != user.email and \
-            User.query.filter_by(email=data['email']).first():
-        return bad_request('please use a different email address')
-    user.from_dict(data, new_user=False)
-    db.session.commit()
-    return jsonify(user.to_dict())
