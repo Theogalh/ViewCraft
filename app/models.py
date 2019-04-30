@@ -96,9 +96,9 @@ class User(PaginateAPIMixin, UserMixin, db.Model):
             'follower_count': self.followers.count(),
             'followed_count': self.followed.count(),
             '_links': {
-                'self': url_for('api.get_user', id=self.id),
-                'followers': url_for('api.get_followers', id=self.id),
-                'followed': url_for('api.get_followed', id=self.id),
+                'self': url_for('api.get_user', name=self.username),
+                'followers': url_for('api.get_followers', name=self.username),
+                'followed': url_for('api.get_followed', name=self.username),
                 'avatar': self.avatar(128)
             }
         }
