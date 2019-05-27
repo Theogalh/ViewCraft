@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+{% for member in roster.members %}
+{% include '_member.html' %}
+{% endfor %}
+<h1>Add new character</h1>
+<div class="row">
+    <div class="col-md-4">
+        {{ wtf.quick_form(form) }}
+    </div>
+</div>
+{% endblock %}

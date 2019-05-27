@@ -68,3 +68,38 @@ def del_roster(name):
     db.session.delete(roster)
     db.session.commit()
     return 204, ''
+
+
+@bp.route('/roster/<string:name>/characters', methods=['GET'])
+@token_auth.login_required
+def get_characters(name):
+    """
+    Get characters in the roster.
+    :param name: Name of the roster
+    :return: Roster.to_dict with characters
+    """
+    name = name.capitalize()
+    roster = g.current_user.get_roster(name)
+    if not roster:
+        return bad_request('Roster {} does not exist.'.format(name))
+    return 200, jsonify(roster.to_dict(characters=True))
+
+
+@bp.route('/roster/<string:name>/refresh', methods=['GET'])
+@token_auth.login_required
+def refresh_roster(name):
+    """
+    Refresh the characters in the roster.
+    :param name: Name of the roster
+    :return: 200 if success.
+    """
+    name = name.capitalize()
+    roster = g.current_user.get_roster(name)
+    if not roster:
+        return bad_request('Roster {} does not exist.'.format(name))
+    for char in roster.members:
+        try:
+            char.refresh()
+        except ValueError as e:
+            return bad_request('Error when refreshing data for {} : {}'.format(char.name, e))
+    return 200, 'Refresh succeed'

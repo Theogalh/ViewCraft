@@ -63,7 +63,7 @@ class User(PaginateAPIMixin, UserMixin, db.Model):
     token = db.Column(db.String(32), index=True, unique=True)
     token_expiration = db.Column(db.DateTime)
 
-    posts = db.relationship('Post', backref='author', lazy='dynamic')
+    posts = db.relationship('UserPost', backref='author', lazy='dynamic')
     rosters = db.relationship('Roster', backref='owner', lazy='dynamic')
     followed = db.relationship(
         'User', secondary=followers,
@@ -210,11 +210,11 @@ class User(PaginateAPIMixin, UserMixin, db.Model):
         :return: List of Post Object.
         """
         # TODO A voir avec la refonte des posts.
-        followed = Post.query.join(
-            followers, (followers.c.followed_id == Post.user_id)).filter(
+        followed = UserPost.query.join(
+            followers, (followers.c.followed_id == UserPost.user_id)).filter(
             followers.c.follower_id == self.id)
-        own = Post.query.filter_by(user_id=self.id)
-        return followed.union(own).order_by(Post.creation_date.desc())
+        own = UserPost.query.filter_by(user_id=self.id)
+        return followed.union(own).order_by(UserPost.creation_date.desc())
 
     def follow_guild(self, guild):
         """
@@ -267,7 +267,7 @@ class User(PaginateAPIMixin, UserMixin, db.Model):
         """
         # TODO A voir a prendre le nom, plutot que l'object user.
         # TODO A voir a Deprecated, pour utiliser db.session.delete() dans les methodes.
-        self.roster.remove(roster)
+        self.rosters.remove(roster)
 
     def get_roster(self, name):
         """
@@ -286,19 +286,49 @@ def load_user(id):
     return User.query.get(int(id))
 
 
-# TODO Refacto les POSTS.
 class Post(db.Model):
+    __abstract__ = True
     id = db.Column(db.Integer, primary_key=True)
 
     body = db.Column(db.String(140))
-
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     creation_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     update_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
     def __repr__(self):
         return '<Post {}>'.format(self.body)
+
+
+class UserPost(Post):
+    """
+    User's post for post news.
+    """
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    def __repr__(self):
+        return '<UserPost {}>'.format(self.body)
+
+
+class GuildPost(Post):
+    """
+    Guild's post
+    """
+
+    guild_id = db.Column(db.Integer, db.ForeignKey('guild.id'))
+
+    def __repr__(self):
+        return '<GuildPost {}>'.format(self.body)
+
+
+class RosterPost(Post):
+    """
+    Roster's post
+    """
+
+    roster_id = db.Column(db.Integer, db.ForeignKey('roster.id'))
+
+    def __repr__(self):
+        return '<RosterPost {}>'.format(self.body)
 
 
 roster_member = db.Table('roster_member',
@@ -319,7 +349,7 @@ class Roster(db.Model):
 
     name = db.Column(db.String(24))
 
-    ilvl_average = db.Column(db.Float)
+    ilvl_average = db.Column(db.Float, default=0)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     members = db.relationship(
@@ -327,12 +357,31 @@ class Roster(db.Model):
         backref=db.backref('rosters', lazy='dynamic'),
         lazy='dynamic'
     )
+    posts = db.relationship('RosterPost', backref='author', lazy='dynamic')
 
     creation_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     update_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
+    def to_dict(self, characters=False):
+        data = {
+            'id': self.id,
+            'name': self.name,
+            'post_count': self.posts.count(),
+            'follower_count': self.followers.count(),
+            '_links': {
+                'self': url_for('api.get_roster', name=self.name),
+                'characters': url_for('api.get_characters', name=self.name)
+            }
+        }
+        if characters:
+            char_data = []
+            for char in self.members:
+                char_data.append(char.to_dict())
+            data['members'] = char_data
+        return data
+
     def __repr__(self):
-        return '<Roster {}:{}>'.format(self.region, self.name)
+        return '<Roster {}>'.format(self.name)
 
     def add_member(self, character):
         """
@@ -363,10 +412,6 @@ class Roster(db.Model):
         return self.members.filter(
             roster_member.c.character_id == character.id).count() > 0
 
-    def to_dict(self):
-        # TODO Coder la fonction
-        return self.__dict__
-
 
 class Guild(db.Model):
     """
@@ -385,6 +430,7 @@ class Guild(db.Model):
     wowprogress_link = db.Column(db.String(280))
 
     members = db.relationship('Character', backref='guild', lazy='dynamic')
+    posts = db.relationship('GuildPost', backref='author', lazy='dynamic')
 
     creation_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     update_date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
@@ -469,6 +515,24 @@ class Character(db.Model):
     def __repr__(self):
         return '<Character {}:{}:{}>'.format(self.region, self.realm, self.name)
 
+    def to_dict(self):
+        data = {
+            'name': self.name,
+            'realm': self.realm,
+            'class': self.classe,
+            'race': self.race,
+            'level': self.level,
+            'ilevel': self.ilevel,
+            'rio_score': self.rio_score,
+            '_links': {
+                'self': url_for('api.get_character', name=self.name, realm=self.realm),
+                'armory': self.armory_link,
+                'raiderio': self.rio_link,
+                'warcraftlog': self.wlog_link
+            }
+        }
+        return data
+
     # TODO Ajouter en tache de fond.
     def refresh(self, index=0, roster=False):
         """
@@ -508,32 +572,3 @@ class Character(db.Model):
         self.update_date = datetime.now()
         # TODO Ajouter le check de MM+.
         # TODO Ajouter le lien warcraftlogs
-
-    # def get_msg(self, leaves):
-    #     if leaves:
-    #         mod = 'left'
-    #     else:
-    #         mod = 'joined'
-    #     msg = 'Player {} {} {}.\n' \
-    #           'Ilvl : {}\n' \
-    #           'Rio Score : {}\n' \
-    #           'Class : {}\n' \
-    #           'Race : {} \n' \
-    #           'Armory : <{}>\n' \
-    #           'RaiderIo : <{}>\n'.format(self.name, mod, self.guild, self.ilvl, self.raiderio, self.classe, self.race,
-    #                                      self.armory, self.raiderio_link)
-    #     return msg
-
-# class Task(db.Model):
-#     id = db.Column(db.String(36), primary_key=True)
-#     name = db.Column(db.String(128), index=True)
-#     description = db.Column(db.String(128))
-#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-#     complete = db.Column(db.Boolean, default=False)
-#
-#     def get_rq_job(self):
-#         try:
-#             rq_job = rq_job.Job.fetch(self.id, connection=current_app.redis)
-#         except (redis.exceptions.RedisError, rq.exceptions.NoSuchJobError):
-#             return None
-#         return rq_job

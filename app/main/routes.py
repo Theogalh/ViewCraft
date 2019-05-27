@@ -1,9 +1,9 @@
 from app.main import bp
 from app import db
 from flask import render_template, flash, redirect, url_for, request, current_app
-from app.main.forms import EditProfileForm, PostForm
+from app.main.forms import EditProfileForm, PostForm, RosterForm, CharacterForm
 from flask_login import current_user, login_user, logout_user, login_required
-from app.models import User, Post
+from app.models import User, UserPost, Roster
 from datetime import datetime
 from app.email import send_email
 
@@ -14,7 +14,7 @@ from app.email import send_email
 def index():
     form = PostForm()
     if form.validate_on_submit():
-        post = Post(body=form.post.data, author=current_user)
+        post = UserPost(body=form.post.data, author=current_user)
         db.session.add(post)
         db.session.commit()
         flash('Your post is now live!')
@@ -31,7 +31,7 @@ def index():
 @login_required
 def explore():
     page = request.args.get('page', 1, type=int)
-    posts = Post.query.order_by(Post.creation_date.desc()).paginate(
+    posts = UserPost.query.order_by(UserPost.creation_date.desc()).paginate(
         page, current_app.config['POSTS_PER_PAGE'], False
     )
     next_url = url_for('main.index', page=posts.next_num) if posts.has_next else None
@@ -51,7 +51,7 @@ def logout():
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     page = request.args.get('page', 1, type=int)
-    posts = user.posts.order_by(Post.creation_date.desc()).paginate(
+    posts = user.posts.order_by(UserPost.creation_date.desc()).paginate(
         page, current_app.config['POSTS_PER_PAGE'], False
     )
     next_url = url_for('main.index', page=posts.next_num) if posts.has_next else None
@@ -117,3 +117,31 @@ def before_request():
     if current_user.is_authenticated:
         current_user.last_seen = datetime.utcnow()
         db.session.commit()
+
+
+@bp.route('/rosters', methods=['POST', 'GET'])
+@login_required
+def rosters():
+    form = RosterForm()
+
+    if form.validate_on_submit():
+        for roster in current_user.rosters:
+            if roster.name == form.rosterName.data:
+                flash('A roster with this name already exists.')
+                return redirect(url_for('main.rosters'))
+        roster = Roster(name=form.rosterName.data, owner=current_user)
+        db.session.add(roster)
+        db.session.commit()
+        flash('You create a roster {}'.format(form.rosterName.data))
+
+    return render_template('rosters.html', title='Rosters', form=form, rosters=current_user.rosters)
+
+
+@bp.route('/rosters/<rosterName>', methods=['POST', 'GET'])
+@login_required
+def roster(rosterName):
+    form = CharacterForm()
+    roster = Roster.query.filter_by(name=rosterName, user_id=current_user.id).first_or_404()
+    if form.validate_on_submit():
+        pass
+    return render_template('roster.html', roster=roster, form=form)

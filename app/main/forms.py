@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField
+from wtforms import StringField, SubmitField, TextAreaField, HiddenField
 from wtforms.validators import DataRequired, ValidationError, Length
 from app.models import User
 
@@ -23,3 +23,14 @@ class EditProfileForm(FlaskForm):
 class PostForm(FlaskForm):
     post = TextAreaField('Say something', validators=[DataRequired(), Length(min=1, max=140)])
     submit = SubmitField('Submit')
+
+
+class RosterForm(FlaskForm):
+    rosterName = StringField('RosterName', validators=[DataRequired(), Length(min=0, max=24)])
+    submit = SubmitField('Create')
+
+
+class CharacterForm(FlaskForm):
+    name = StringField('CharacterName', validators=[DataRequired(), Length(min=0, max=20)])
+    realm = StringField('RealmName', validators=[DataRequired(), Length(min=0, max=20)])
+    submit = SubmitField('AddCharacter')
