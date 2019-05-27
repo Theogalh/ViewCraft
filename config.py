@@ -32,5 +32,3 @@ class Config(object):
     BNET_REGION = os.environ.get('BNET_REGION') or 'eu'
     BNET_LOCALE = os.environ.get('BNET_LOCALE') or 'fr_FR'
 
-
-
