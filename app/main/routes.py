@@ -126,10 +126,10 @@ def rosters():
 
     if form.validate_on_submit():
         for roster in current_user.rosters:
-            if roster.name == form.rosterName.data:
+            if roster.name == form.rosterName.data.capitalize():
                 flash('A roster with this name already exists.')
                 return redirect(url_for('main.rosters'))
-        roster = Roster(name=form.rosterName.data, owner=current_user)
+        roster = Roster(name=form.rosterName.data.capitalize(), owner=current_user)
         db.session.add(roster)
         db.session.commit()
         flash('You create a roster {}'.format(form.rosterName.data))

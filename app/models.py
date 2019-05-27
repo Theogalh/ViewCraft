@@ -275,8 +275,8 @@ class User(PaginateAPIMixin, UserMixin, db.Model):
         :param name: String with the name of the Roster
         :return: Roster object, or None.
         """
-        for roster in self.roster:
-            if roster.name is name:
+        for roster in self.rosters:
+            if roster.name == name:
                 return roster
         return None
 
@@ -367,7 +367,6 @@ class Roster(db.Model):
             'id': self.id,
             'name': self.name,
             'post_count': self.posts.count(),
-            'follower_count': self.followers.count(),
             '_links': {
                 'self': url_for('api.get_roster', name=self.name),
                 'characters': url_for('api.get_characters', name=self.name)
@@ -390,6 +389,7 @@ class Roster(db.Model):
         :return: None
         """
         # TODO Ajouter un RosterPost
+        # TODO Ajouter la mise a jour du ilvl_average.
         if not self.is_in_roster(character):
             self.members.append(character)
 
@@ -400,6 +400,7 @@ class Roster(db.Model):
         :return: None
         """
         # TODO Ajouter un RosterPost
+        # TODO Ajouter la mise a jour du ilvl_average.
         if self.is_in_roster(character):
             self.members.remove(character)
 
@@ -525,7 +526,6 @@ class Character(db.Model):
             'ilevel': self.ilevel,
             'rio_score': self.rio_score,
             '_links': {
-                'self': url_for('api.get_character', name=self.name, realm=self.realm),
                 'armory': self.armory_link,
                 'raiderio': self.rio_link,
                 'warcraftlog': self.wlog_link
@@ -533,7 +533,6 @@ class Character(db.Model):
         }
         return data
 
-    # TODO Ajouter en tache de fond.
     def refresh(self, index=0, roster=False):
         """
         Refresh all web-data of the character.
@@ -541,10 +540,10 @@ class Character(db.Model):
         :param roster: For only refresh the data for the Roster, and not all the character.
         :return: None
         """
-
+        # TODO Ajouter un check sur le last_update pour update une fois par heure max.
         if index > 3:
             return 404
-        r = bnet.get_player(self.server, self.name, "items")
+        r = bnet.get_character(self.realm, self.name, "items")
         if r.status_code != 200:
             return self.refresh(index+1)
         r = r.json()
@@ -554,12 +553,12 @@ class Character(db.Model):
         self.classe = CLASS[int(r["class"])]
         self.race = RACE[int(r["race"])]
         self.armory_link = "https://worldofwarcraft.com/fr-fr/character/{}/{}".format(
-            self.server,
+            self.realm.replace(' ', '-'),
             self.name
         )
         url = 'https://raider.io/api/v1/characters/profile?region={}&realm={}&name={}&fields=mythic_plus_scores'.format(
             bnet.region,
-            self.server,
+            self.realm,
             self.name
         )
         r = requests.get(url)

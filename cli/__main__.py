@@ -7,14 +7,16 @@ from argparse import ArgumentParser
 from rosters import subparser_install as roster_subparser
 from auth import subparser_install as auth_subparser
 from guilds import subparser_install as guild_subparser
-from posts import subparser_install as post_subparser
 
 MAIN_COMMANDS = [
     ('roster', roster_subparser),
     ('auth', auth_subparser),
     ('guild', guild_subparser),
-    ('post', post_subparser),
 ]
+
+TOKEN = None
+with open('.token', 'r') as file:
+    TOKEN = file.read()
 
 
 def main():
@@ -33,6 +35,7 @@ def main():
         command[1](cmd_subparser)
 
     argument = parser.parse_args()
+    argument.headers = {'Authorization': 'Bearer {}'.format(TOKEN)}
     argument.func(**vars(argument))
 
 

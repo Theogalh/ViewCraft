@@ -1,6 +1,6 @@
 from app.api import bp
-from flask import jsonify, request, g
-from app.models import Roster
+from flask import jsonify, g
+from app.models import Roster, Character
 from app import db
 from app.api.auth import token_auth
 from app.api.errors import error_response, bad_request
@@ -16,7 +16,7 @@ def get_all_roster():
     data = []
     for roster in g.current_user.rosters:
         data.append(roster.to_dict())
-    return jsonify(data)
+    return jsonify(data), 200
 
 
 @bp.route('/roster/<string:name>', methods=['GET'])
@@ -31,7 +31,7 @@ def get_roster(name):
     roster = g.current_user.get_roster(name)
     if not roster:
         return error_response(404, 'Roster does not exist')
-    return jsonify(roster.to_dict())
+    return jsonify(roster.to_dict()), 200
 
 
 @bp.route('/roster/<string:name>', methods=['POST'])
@@ -50,7 +50,28 @@ def add_roster(name):
     g.current_user.add_roster(roster)
     db.session.add(roster)
     db.session.commit()
-    return '201', jsonify(roster.to_dict())
+    return jsonify(roster.to_dict()), 201
+
+
+@bp.route('/roster/<string:name>', methods=['PUT'])
+@token_auth.login_required
+def refresh_roster(name):
+    """
+    Refresh the characters in the roster.
+    :param name: Name of the roster
+    :return: 200 if success.
+    """
+    # TODO A tester
+    name = name.capitalize()
+    roster = g.current_user.get_roster(name)
+    if not roster:
+        return bad_request('Roster {} does not exist.'.format(name))
+    for char in roster.members:
+        try:
+            char.refresh()
+        except ValueError as e:
+            return bad_request('Error when refreshing data for {} : {}'.format(char.name, e))
+    return 'Refresh succeed', 200
 
 
 @bp.route('/roster/<string:name>', methods=['DELETE'])
@@ -67,10 +88,10 @@ def del_roster(name):
         return bad_request('Roster {} does not exist.'.format(name))
     db.session.delete(roster)
     db.session.commit()
-    return 204, ''
+    return '', 204
 
 
-@bp.route('/roster/<string:name>/characters', methods=['GET'])
+@bp.route('/roster/<string:name>/members', methods=['GET'])
 @token_auth.login_required
 def get_characters(name):
     """
@@ -82,24 +103,71 @@ def get_characters(name):
     roster = g.current_user.get_roster(name)
     if not roster:
         return bad_request('Roster {} does not exist.'.format(name))
-    return 200, jsonify(roster.to_dict(characters=True))
+    data = []
+    for character in roster.members:
+        data.append(character.to_dict())
+    return jsonify(data), 200
 
 
-@bp.route('/roster/<string:name>/refresh', methods=['GET'])
+@bp.route('/roster/<string:name>/members/<string:realm>/<string:charName>', methods=['POST'])
 @token_auth.login_required
-def refresh_roster(name):
-    """
-    Refresh the characters in the roster.
-    :param name: Name of the roster
-    :return: 200 if success.
-    """
+def add_character(name, realm, charName):
     name = name.capitalize()
+    realm = realm.capitalize()
+    charName = charName.capitalize()
     roster = g.current_user.get_roster(name)
     if not roster:
-        return bad_request('Roster {} does not exist.'.format(name))
-    for char in roster.members:
+        return bad_request('Roster {} does not exists'.format(name))
+    char = Character.query.filter_by(name=charName, realm=realm).first()
+    if not char:
+        char = Character(name=charName, realm=realm)
         try:
             char.refresh()
-        except ValueError as e:
-            return bad_request('Error when refreshing data for {} : {}'.format(char.name, e))
-    return 200, 'Refresh succeed'
+        except ValueError:
+            return bad_request('Character {}:{} does not exists'.format(realm, charName))
+        db.session.add(char)
+    if roster.is_in_roster(char):
+        return bad_request('Character {}:{} is already in roster {}'.format(realm, charName, name))
+    roster.add_member(char)
+    db.session.commit()
+    return jsonify('Character {}:{} added to roster {}'.format(realm, charName, name)), 201
+
+
+@bp.route('/roster/<string:name>/members/<string:realm>/<string:charName>', methods=['PUT'])
+@token_auth.login_required
+def refresh_character(name, realm, charName):
+    name = name.capitalize()
+    realm = realm.capitalize()
+    charName = charName.capitalize()
+    roster = g.current_user.get_roster(name)
+    if not roster:
+        return bad_request('Roster {} does not exists'.format(name))
+    char = Character.query.filter_by(name=charName, realm=realm).first()
+    if not char:
+        return bad_request('Character {}:{} does not exists'.format(realm, charName))
+    if roster.is_in_roster(char):
+        char.refresh()
+        db.session.commit()
+        return jsonify('Character {}:{} refresh'.format(realm, charName)), 200
+    else:
+        return bad_request('Character {}:{} is not in roster {}'.format(realm, charName, name))
+
+
+@bp.route('/roster/<string:name>/members/<string:realm>/<string:charName>', methods=['DELETE'])
+@token_auth.login_required
+def del_character(name, realm, charName):
+    name = name.capitalize()
+    realm = realm.capitalize()
+    charName = charName.capitalize()
+    roster = g.current_user.get_roster(name)
+    if not roster:
+        return bad_request('Roster {} does not exists'.format(name))
+    char = Character.query.filter_by(name=charName, realm=realm).first()
+    if not char:
+        return bad_request('Character {}:{} does not exists'.format(realm, charName))
+    if roster.is_in_roster(char):
+        roster.del_member(char)
+        db.session.commit()
+        return jsonify('Character {}:{} deleted from roster {}'.format(realm, charName, name)), 200
+    else:
+        return bad_request('Character {}:{} is not in roster {}'.format(realm, charName, name))
