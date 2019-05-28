@@ -6,9 +6,9 @@ from app import db, bnet
 from app.api.auth import token_auth
 
 
-@bp.route('/<string:realm>/guilds/')
+@bp.route('/guild/<string:realm>', methods=['GET'])
 @token_auth.login_required
-def get_guilds(realm):
+def get_guilds(realm, name):
     """
     Get all guilds of a Realm.
     :param region: Region of the realm
@@ -19,13 +19,13 @@ def get_guilds(realm):
     realm = realm.capitalize()
     guilds = Guild.query.filter_by(region=current_app.config['BNET_REGION'], realm=realm).all()
     if not guilds:
-        return bad_request('Verify the realm and region.')
+        return bad_request('No guilds added in this realm, or realm does not exists.')
     for guild in guilds:
         data.append(guild.to_dict())
     return jsonify(data)
 
 
-@bp.route('/<string:realm>/guild/<string:guildname>', methods=['GET'])
+@bp.route('/guild/<string:realm>/<string:guildname>', methods=['GET'])
 @token_auth.login_required
 def get_guild(realm, guildname):
     """
@@ -50,7 +50,7 @@ def get_guild(realm, guildname):
     return jsonify(guild.to_dict())
 
 
-@bp.route('/<string:realm>/guild/<string:guildname>', methods=['POST'])
+@bp.route('/guild/<string:realm>/<string:guildname>', methods=['PUT'])
 @token_auth.login_required
 def refresh_guild(realm, guildname):
     """
@@ -79,7 +79,7 @@ def refresh_guild(realm, guildname):
     return jsonify(guild.to_dict())
 
 
-@bp.route('/<string:realm>/guild/<string:guildname>/news', methods=['GET'])
+@bp.route('/guild/<string:realm>/<string:guildname>/posts', methods=['GET'])
 @token_auth.login_required
 def get_guild_news(realm, guildname):
     """

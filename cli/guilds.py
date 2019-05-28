@@ -1,5 +1,6 @@
 from conf import URL
 import requests
+from pprint import pprint
 
 
 def subparser_install(subparser):
@@ -38,38 +39,51 @@ def subparser_install(subparser):
     parser_guild_posts.set_defaults(func=guild_posts)
     parser_guild_posts.add_argument('realm', help='Realm of the guild.')
     parser_guild_posts.add_argument('name', help='Realm of the guild.')
+    parser_guild_realm = subparser.add_parser(
+        'guild_realm',
+        help='Get all guilds from a realm'
+    )
+    parser_guild_realm.set_defaults(func=guild_realm)
+    parser_guild_realm.add_argument('realm', help='Realm of the guilds')
 
 
 def guild_follow(realm, name, **kwargs):
     url = URL + '/api/guild/{}/{}'.format(realm, name)
     req = requests.post(url, headers=kwargs['headers'])
-    print(req.status_code)
-    print(req.json())
+    pprint(req.status_code)
+    pprint(req.json())
 
 
 def guild_unfollow(realm, name, **kwargs):
     url = URL + '/api/guild/{}/{}'.format(realm, name)
     req = requests.delete(url, headers=kwargs['headers'])
-    print(req.status_code)
-    print(req.json())
+    pprint(req.status_code)
+    pprint(req.json())
 
 
 def guild_refresh(realm, name, **kwargs):
     url = URL + '/api/guild/{}/{}'.format(realm, name)
     req = requests.put(url, headers=kwargs['headers'])
-    print(req.status_code)
-    print(req.json())
+    pprint(req.status_code)
+    pprint(req.json())
 
 
 def guild_infos(realm, name, **kwargs):
     url = URL + '/api/guild/{}/{}'.format(realm, name)
     req = requests.get(url, headers=kwargs['headers'])
-    print(req.status_code)
-    print(req.json())
+    pprint(req.status_code)
+    pprint(req.json())
 
 
 def guild_posts(realm, name, **kwargs):
     url = URL + '/api/guild/{}/{}/posts'.format(realm, name)
     req = requests.get(url, headers=kwargs['headers'])
-    print(req.status_code)
-    print(req.json())
+    pprint(req.status_code)
+    pprint(req.json())
+
+
+def guild_realm(realm, **kwargs):
+    url = URL + '/api/guild/{}'.format(realm)
+    req = requests.get(url, headers=kwargs['headers'])
+    pprint(req.status_code)
+    pprint(req.json())
