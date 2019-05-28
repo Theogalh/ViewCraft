@@ -1,5 +1,14 @@
 import requests
 
+REGIONS = [
+    'eu',
+    'us',
+    'kr',
+    'tw'
+]
+
+# TODO Rework pour mettre en ligne sur PIP.
+
 
 class BnetRequests:
     def __init__(self):
@@ -34,20 +43,32 @@ class BnetRequests:
             req = requests.get(url, headers=self.headers)
         return req
 
-    def get_guild(self, server, guildname, field):
+    def get_guild(self, realm, guildname, field):
         url = 'https://{}.api.blizzard.com/wow/guild/{}/{}?fields={}&locale={}'.format(self.region,
-                                                                                       server,
+                                                                                       realm,
                                                                                        guildname,
                                                                                        field,
                                                                                        self.locale)
         req = self.get(url)
         return req
 
-    def get_character(self, server, charName, field):
+    def get_character(self, realm, charName, field):
         url = 'https://{}.api.blizzard.com/wow/character/{}/{}?fields={}&locale={}'.format(self.region,
-                                                                                           server,
+                                                                                           realm,
                                                                                            charName,
                                                                                            field,
                                                                                            self.locale)
         req = self.get(url)
         return req
+
+    # @property
+    # def region(self):
+    #     return self._region
+    #
+    # @region.setter
+    # def region(self, region):
+    #     print(region)
+    #     if str(region).lower() not in REGIONS:
+    #         raise ValueError
+    #     else:
+    #         self._region = region
