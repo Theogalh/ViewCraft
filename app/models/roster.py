@@ -38,6 +38,7 @@ class Roster(db.Model):
             'id': self.id,
             'name': self.name,
             'post_count': self.posts.count(),
+            'ilvl_average': self.ilvl_average,
             '_links': {
                 'self': url_for('api.get_roster', name=self.name),
                 'characters': url_for('api.get_characters', name=self.name)
@@ -53,15 +54,18 @@ class Roster(db.Model):
     def __repr__(self):
         return '<Roster {}>'.format(self.name)
 
-    def add_member(self, character):
+    def add_member(self, character, create=False):
         """
         Add a Character in the Roster.
         :param character: Character object
+        :param Create: If true, dont create RosterPost for members.
         :return: None
         """
-        # TODO Ajouter un RosterPost
-        # TODO Ajouter la mise a jour du ilvl_average.
+        if not create:
+            # TODO Ajouter un RosterPost
+            pass
         if not self.is_in_roster(character):
+            self.ilvl_average = (self.ilvl_average * self.length() + character.ilevel) / (self.length() + 1)
             self.members.append(character)
 
     def del_member(self, character):
@@ -71,8 +75,11 @@ class Roster(db.Model):
         :return: None
         """
         # TODO Ajouter un RosterPost
-        # TODO Ajouter la mise a jour du ilvl_average.
         if self.is_in_roster(character):
+            if self.length() == 1:
+                self.ilvl_average = 0
+            else:
+                self.ilvl_average = (self.ilvl_average * self.length() - character.ilevel) / (self.length() - 1)
             self.members.remove(character)
 
     def is_in_roster(self, character):
@@ -83,3 +90,6 @@ class Roster(db.Model):
         """
         return self.members.filter(
             roster_member.c.character_id == character.id).count() > 0
+
+    def length(self):
+        return self.members.count()
