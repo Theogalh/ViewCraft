@@ -7,14 +7,9 @@ load_dotenv(os.path.join(basedir, '.env'))
 
 class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'supersecret'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///' + os.path.join(basedir, 'app.db')
-    # 'postgresql://{}:{}@{}:{}/{}'.format(
-    #     'pgsql',  # USERNAME
-    #     'pgsql',  # PASSWORD
-    #     'localhost',  # HOSTNAME
-    #     '5432',  # PORT
-    #     'test',  # DB NAME
-    # )
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') \
+                              or 'sqlite:///' + os.path.join(basedir, 'app.db')
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'smtp.gmail.com'
@@ -32,3 +27,7 @@ class Config(object):
     BNET_REGION = os.environ.get('BNET_REGION') or 'eu'
     BNET_LOCALE = os.environ.get('BNET_LOCALE') or 'fr_FR'
 
+    RECAPTCHA_USE_SSL = False
+    RECAPTCHA_PUBLIC_KEY = os.environ.get('GOOGLE_RECAPTCHA_PUBLIC') or None
+    RECAPTCHA_PRIVATE_KEY = os.environ.get('GOOGLE_RECAPTCHA_PRIVATE') or None
+    RECAPTCHA_OPTIONS = {'theme': 'black'}
