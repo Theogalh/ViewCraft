@@ -13,7 +13,6 @@ from logging.handlers import SMTPHandler, RotatingFileHandler
 from .utils.bnetrequests import BnetRequests
 
 # Init Flask's module.
-
 db = SQLAlchemy()
 migrate = Migrate()
 login = LoginManager()

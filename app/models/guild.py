@@ -34,7 +34,6 @@ class Guild(db.Model):
         :param character: Character object.
         :return: None
         """
-        # TODO Ajouter la creation de GuildPost si c'est call par un REFRESH.
         self.members.append(character)
 
     def del_member(self, character):
@@ -43,11 +42,10 @@ class Guild(db.Model):
         :param character: Character object to del of the Guild.
         :return: None
         """
-        # TODO Ajouter la creation de GuildPost si c'est call par un REFRESH.
         self.members.remove(character)
 
     # TODO En faire une task.
-    def refresh(self):
+    def refresh(self, created):
         # TODO Coder la fonction
         # Refresh les members
         # Post_Update a chaque leave / down / join

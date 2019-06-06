@@ -40,8 +40,8 @@ class Roster(db.Model):
             'post_count': self.posts.count(),
             'ilvl_average': self.ilvl_average,
             '_links': {
-                'self': url_for('api.get_roster', name=self.name),
-                'characters': url_for('api.get_characters', name=self.name)
+                'self': url_for('api.roster_specific_roster', name=self.name),
+                'characters': url_for('api.roster_roster_members', name=self.name)
             }
         }
         if characters:
@@ -58,7 +58,7 @@ class Roster(db.Model):
         """
         Add a Character in the Roster.
         :param character: Character object
-        :param Create: If true, dont create RosterPost for members.
+        :param create: If true, dont create RosterPost for members.
         :return: None
         """
         if not create:

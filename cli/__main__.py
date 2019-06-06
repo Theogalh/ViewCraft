@@ -15,8 +15,11 @@ MAIN_COMMANDS = [
 ]
 
 TOKEN = None
-with open('.token', 'r') as file:
-    TOKEN = file.read()
+try:
+    with open('.token', 'r') as file:
+        TOKEN = file.read()
+except FileNotFoundError:
+    pass
 
 
 def main():

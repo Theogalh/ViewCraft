@@ -66,21 +66,21 @@ def subparser_install(subparser):
 
 
 def get_roster(**kwargs):
-    url = URL + '/api/roster'
+    url = URL + '/api/rosters'
     req = requests.get(url, headers=kwargs['headers'])
     pprint(req.status_code)
     pprint(req.json())
 
 
 def roster_create(name, **kwargs):
-    url = URL + '/api/roster/{}'.format(name)
+    url = URL + '/api/rosters/{}'.format(name)
     req = requests.post(url, headers=kwargs['headers'])
     pprint(req.status_code)
     pprint(req.json())
 
 
 def roster_delete(name, **kwargs):
-    url = URL + '/api/roster/{}'.format(name)
+    url = URL + '/api/rosters/{}'.format(name)
     req = requests.delete(url, headers=kwargs['headers'])
     pprint(req.status_code)
     if req.status_code == 204:
@@ -90,42 +90,42 @@ def roster_delete(name, **kwargs):
 
 
 def roster_refresh(name, **kwargs):
-    url = URL + '/api/roster/{}'.format(name)
+    url = URL + '/api/rosters/{}'.format(name)
     req = requests.put(url, headers=kwargs['headers'])
     pprint({'status_code': req.status_code})
     pprint(req.json())
 
 
 def roster_get(name, **kwargs):
-    url = URL + '/api/roster/{}'.format(name)
+    url = URL + '/api/rosters/{}'.format(name)
     req = requests.get(url, headers=kwargs['headers'])
     pprint({'status_code': req.status_code})
     pprint(req.json())
 
 
 def roster_get_members(name, **kwargs):
-    url = URL + '/api/roster/{}/members'.format(name)
+    url = URL + '/api/rosters/{}/members'.format(name)
     req = requests.get(url, headers=kwargs['headers'])
     pprint({'status_code': req.status_code})
     pprint(req.json())
 
 
 def roster_add_member(name, realm, charName, **kwargs):
-    url = URL + '/api/roster/{}/members/{}/{}'.format(name, realm, charName)
+    url = URL + '/api/rosters/{}/members/{}/{}'.format(name, realm, charName)
     req = requests.post(url, headers=kwargs['headers'])
     pprint({'status_code': req.status_code})
     pprint(req.json())
 
 
 def roster_refresh_member(name, realm, charName, **kwargs):
-    url = URL + '/api/roster/{}/members/{}/{}'.format(name, realm, charName)
+    url = URL + '/api/rosters/{}/members/{}/{}'.format(name, realm, charName)
     req = requests.put(url, headers=kwargs['headers'])
     pprint({'status_code': req.status_code})
     pprint(req.json())
 
 
 def roster_del_member(name, realm, charName, **kwargs):
-    url = URL + '/api/roster/{}/members/{}/{}'.format(name, realm, charName)
+    url = URL + '/api/rosters/{}/members/{}/{}'.format(name, realm, charName)
     req = requests.delete(url, headers=kwargs['headers'])
     pprint({'status_code': req.status_code})
     pprint(req.json())
