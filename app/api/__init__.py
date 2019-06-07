@@ -3,6 +3,7 @@ from app.api.rosters import api as rosters_ns
 from app.api.tokens import api as tokens_ns
 from app.api.guilds import api as guilds_ns
 from app.api.users import api as users_ns
+from app.api.characters import api as characters_ns
 from flask import Blueprint, current_app, request, make_response
 import json
 
@@ -19,6 +20,7 @@ api.add_namespace(rosters_ns)
 api.add_namespace(tokens_ns)
 api.add_namespace(guilds_ns)
 api.add_namespace(users_ns)
+api.add_namespace(characters_ns)
 
 
 @api.representation('application/json')

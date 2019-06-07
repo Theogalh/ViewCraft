@@ -1,6 +1,7 @@
 from app import db, bnet
 from app.data import CLASS, RACE
-from datetime import datetime
+from datetime import datetime, timedelta
+from time import time
 import requests
 
 
@@ -39,6 +40,7 @@ class Character(db.Model):
         data = {
             'name': self.name,
             'realm': self.realm,
+            'region': self.region,
             'class': self.classe,
             'race': self.race,
             'level': self.level,
@@ -52,19 +54,26 @@ class Character(db.Model):
         }
         return data
 
-    def refresh(self, index=0, roster=False):
+    @property
+    def infos(self):
+        return self.name, self.realm
+
+    def refresh(self, index=0, roster=False, created=False):
         """
         Refresh all web-data of the character.
         :param index: For retry the bnet request who sometimes failed.
         :param roster: For only refresh the data for the Roster, and not all the character.
+        :param created: For force refresh after creation.
         :return: None
         """
-        # TODO Ajouter un check sur le last_update pour update une fois par heure max.
+        if (self.update_date + timedelta(days=1)) > datetime.utcnow() and not created:
+            return
         if index > 3:
-            return 404
+            return
+        self.region = bnet.region
         r = bnet.get_character(self.realm, self.name, "items")
         if r.status_code != 200:
-            return self.refresh(index+1)
+            raise ValueError(r.json())
         r = r.json()
         self.ilevel = int(r["items"]['averageItemLevelEquipped'])
         if roster:
@@ -87,6 +96,9 @@ class Character(db.Model):
             r = r.json()
             self.rio_score = r["mythic_plus_scores"]["all"]
             self.rio_link = r["profile_url"]
+        self.wlog_link = "https://www.warcraftlogs.com/character/{}/{}/{}".format(
+            bnet.region,
+            self.realm.replace(' ', '-'),
+            self.name
+        )
         self.update_date = datetime.now()
-        # TODO Ajouter le check de MM+.
-        # TODO Ajouter le lien warcraftlogs

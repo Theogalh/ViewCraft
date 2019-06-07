@@ -40,8 +40,8 @@ class Roster(db.Model):
             'post_count': self.posts.count(),
             'ilvl_average': self.ilvl_average,
             '_links': {
-                'self': url_for('api.roster_specific_roster', name=self.name),
-                'characters': url_for('api.roster_roster_members', name=self.name)
+                'self': url_for('api.rosters_specific_roster', name=self.name),
+                'characters': url_for('api.rosters_roster_members', name=self.name)
             }
         }
         if characters:
