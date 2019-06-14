@@ -1,14 +1,15 @@
-from flask import current_app
+from flask import current_app, url_for
 from app.models import Guild
 from app import bnet
 
 from app import db
 from app.api.auth import token_auth
-from app.api.errors import error_response, bad_request
 
 from flask_restplus import Namespace, Resource
+from app.models.marshal import guilds_public_fields
 
 api = Namespace('guilds', description='Guilds operations')
+guilds_public = api.model('Guild', guilds_public_fields)
 
 
 class GuildRessource(Resource):
@@ -24,6 +25,7 @@ class AllGuildsRealms(GuildRessource):
     @api.doc(description='List all guilds on a specific realms register on viewcraft')
     @api.response(403, 'Not Authorized')
     @api.response(404, 'No such guild')
+    @api.marshal_list_with(guilds_public)
     def get(self, realm):
         """
         Get all guilds of a Realm.
@@ -31,14 +33,11 @@ class AllGuildsRealms(GuildRessource):
         :param realm: Realm of the guilds
         :return: List of Guild.to_dict
         """
-        data = []
         realm = realm.capitalize()
         guilds = Guild.query.filter_by(region=current_app.config['BNET_REGION'], realm=realm).all()
         if not guilds:
-            return bad_request('No guilds added in this realm, or realm does not exists.')
-        for guild in guilds:
-            data.append(guild.to_dict())
-        return data, 200
+            return api.abort(404, 'No guilds added in this realm, or realm does not exists.')
+        return guilds, 200
 
 
 @api.route('/<realm>/<guildname>')
@@ -47,6 +46,7 @@ class SpecificGuild(GuildRessource):
     @api.doc(description='Get guilds informations')
     @api.response(403, 'Not Authorized')
     @api.response(404, 'No such guild')
+    @api.marshal_with(guilds_public)
     def get(self, realm, guildname):
         """
         Return all guild informations, create her and refresh her if she does'nt exist in DB.
@@ -60,18 +60,19 @@ class SpecificGuild(GuildRessource):
         if not guild:
             req = bnet.get_guild(realm, guildname)
             if req.status_code != 200:
-                return error_response(404, 'Guild {}:{}:{} does not exist'.format(
+                return api.abort(404, 'Guild {}:{}:{} does not exist'.format(
                     current_app.config['BNET_REGION'], realm, guildname
                 ))
             guild = Guild(region=current_app.config['BNET_REGION'], realm=realm, name=guildname)
             db.session.add(guild)
             db.session.commit()
-        return guild.to_dict(), 200
+        return guild, 200
 
     @api.header('Authorization', 'Bearer', required=True)
     @api.doc(description='Refresh guilds informations')
     @api.response(403, 'Not Authorized')
     @api.response(404, 'No such guild')
+    @api.marshal_with(guilds_public)
     def put(self, realm, guildname):
         """
         Refresh guild with Bnet API. Create her in DB if she doesn't.
@@ -85,7 +86,7 @@ class SpecificGuild(GuildRessource):
         if not guild:
             req = bnet.get_guild(realm, guildname)
             if req.status_code != 200:
-                return error_response(404, 'Guild {}:{}:{} does not exist'.format(
+                return api.abort(404, 'Guild {}:{}:{} does not exist'.format(
                     current_app.config['BNET_REGION'], realm, guildname
                 ))
             guild = Guild(region=current_app.config['BNET_REGION'], realm=realm, name=guildname)
@@ -95,7 +96,7 @@ class SpecificGuild(GuildRessource):
         else:
             guild.refresh()
             db.session.commit()
-        return guild.to_dict(), 200
+        return guild, 200
 
 
 @api.route('<realm>/<guildname>/posts')
@@ -116,7 +117,7 @@ class SpecificGuildNews(GuildRessource):
         guildname = guildname.capitalize()
         guild = Guild.query.filter_by(region=current_app.config['BNET_REGION'], realm=realm, name=guildname).first()
         if not guild:
-            return error_response(404, 'Guild {}:{}:{} does not exist'.format(
+            return api.abort(404, 'Guild {}:{}:{} does not exist'.format(
                 current_app.config['BNET_REGION'], realm, guildname
             ))
         return guild.get_news(), 200

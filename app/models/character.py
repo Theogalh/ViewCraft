@@ -58,7 +58,7 @@ class Character(db.Model):
     def infos(self):
         return self.name, self.realm
 
-    def refresh(self, index=0, roster=False, created=False):
+    def refresh(self, index=0, created=False):
         """
         Refresh all web-data of the character.
         :param index: For retry the bnet request who sometimes failed.
@@ -66,8 +66,8 @@ class Character(db.Model):
         :param created: For force refresh after creation.
         :return: None
         """
-        if (self.update_date + timedelta(days=1)) > datetime.utcnow() and not created:
-            return
+#        if (self.update_date + timedelta(days=1)) > datetime.utcnow() and not created:
+#            return
         if index > 3:
             return
         self.region = bnet.region
@@ -76,8 +76,7 @@ class Character(db.Model):
             raise ValueError(r.json())
         r = r.json()
         self.ilevel = int(r["items"]['averageItemLevelEquipped'])
-        if roster:
-            return
+        self.level = int(r['level'])
         self.classe = CLASS[int(r["class"])]
         self.race = RACE[int(r["race"])]
         self.armory_link = "https://worldofwarcraft.com/fr-fr/character/{}/{}".format(
@@ -102,3 +101,15 @@ class Character(db.Model):
             self.name
         )
         self.update_date = datetime.now()
+
+
+def get_character(realm, charName):
+    char = Character.query.filter_by(realm=realm.capitalize(), charName=charName.capitalize()).first()
+    if not char:
+        char = Character(realm=realm.capitalize(), name=charName.capitalize())
+        try:
+            char.refresh()
+            db.session.add(char)
+        except ValueError:
+            return None
+    return char

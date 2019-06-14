@@ -93,3 +93,10 @@ class Roster(db.Model):
 
     def length(self):
         return self.members.count()
+
+    def refresh(self):
+        for char in self.members:
+            try:
+                char.refresh()
+            except ValueError as e:
+                raise ValueError(e)

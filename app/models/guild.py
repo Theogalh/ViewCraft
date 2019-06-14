@@ -1,5 +1,6 @@
-from app import db
+from app import db, bnet
 from datetime import datetime
+from app.models.character import Character, get_character
 
 
 class Guild(db.Model):
@@ -44,14 +45,34 @@ class Guild(db.Model):
         """
         self.members.remove(character)
 
-    # TODO En faire une task.
-    def refresh(self, created):
-        # TODO Coder la fonction
-        # Refresh les members
-        # Post_Update a chaque leave / down / join
-        # Update wowprogress_link et armory_link
-        # Update la update_date
-        pass
+    @property
+    def infos(self):
+        return self.name, self.realm
+
+    def check_leaver(self):
+        guild = bnet.get_guild(self.realm, self.name)
+        listName = []
+        for member in guild['members']:
+            if member['level'] == 120:
+                listName.append((member['name'], member['realm']))
+        for member in self.members:
+            if member.infos not in listName:
+                # TODO Add GuildPost for Leave
+                self.members.del_member(member)
+            listName.remove(member.infos)
+        for infos in listName:
+            char = get_character(infos[0]. infos[1])
+            if not char:
+                continue
+            self.add_member(char)
+            # TODO post un GuildPost for Join
+
+    def refresh(self):
+        for char in self.members:
+            try:
+                char.refresh()
+            except ValueError as e:
+                raise ValueError(e)
 
     def post_update(self, character):
         # TODO Creer un GuildPost affichant le leaver/joiner/downdunboss
@@ -65,7 +86,3 @@ class Guild(db.Model):
         """
         # TODO Ajouter la fonction Get news
         return []
-
-    def to_dict(self):
-        # TODO Ajouter la fonction TO DICT
-        return self.__dict__

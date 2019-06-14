@@ -8,7 +8,7 @@ from rosters import subparser_install as roster_subparser
 from auth import subparser_install as auth_subparser
 from guilds import subparser_install as guild_subparser
 from characters import subparser_install as character_subparser
-from users import subparser_install as user_subparser
+from user import subparser_install as user_subparser
 
 MAIN_COMMANDS = [
     ('roster', roster_subparser),
