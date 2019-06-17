@@ -1,6 +1,6 @@
 import unittest
 from viewcraft import create_app, db
-from config import Config
+from viewcraft.config import Config
 import warnings
 
 with warnings.catch_warnings():

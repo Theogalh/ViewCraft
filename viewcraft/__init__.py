@@ -1,5 +1,5 @@
 from flask import Flask
-from config import Config
+from viewcraft.config import Config
 import logging
 import os
 from flask_sqlalchemy import SQLAlchemy
