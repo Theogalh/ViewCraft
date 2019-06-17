@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask
 from config import Config
 import logging
 import os
@@ -8,7 +8,7 @@ from flask_mail import Mail
 from flask_login import LoginManager
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
-from flask_babel import Babel, _
+from flask_babel import Babel
 from logging.handlers import SMTPHandler, RotatingFileHandler
 from .utils.bnetrequests import BnetRequests
 
@@ -87,6 +87,3 @@ def create_app(config_class=Config):
 
     app.logger.info('ViewCraft startup')
     return app
-
-
-from viewcraft import models

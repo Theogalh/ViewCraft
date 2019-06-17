@@ -2,7 +2,7 @@ from viewcraft.main import bp
 from viewcraft import db
 from flask import render_template, flash, redirect, url_for, request, current_app
 from viewcraft.main.forms import EditProfileForm, PostForm, RosterForm, CharacterForm
-from flask_login import current_user, login_user, logout_user, login_required
+from flask_login import current_user, logout_user, login_required
 from viewcraft.models import User, UserPost, Roster
 from datetime import datetime
 from viewcraft.email import send_email

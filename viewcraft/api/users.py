@@ -1,8 +1,8 @@
-from flask import jsonify, request, url_for, g
+from flask import url_for, g
 from viewcraft.models import User
 from viewcraft import db
 from viewcraft.api.auth import token_auth
-from viewcraft.models.marshal import user_public_fields, posts_public_fields, roster_public_fields
+from viewcraft.models.marshal import user_public_fields, posts_public_fields
 from flask_restplus import Namespace, Resource, fields
 
 api = Namespace('users', description='Users operations')
@@ -49,15 +49,15 @@ class UsersRest(Resource):
     def post(self):
         # TODO Check le CAPTCHA
         args = user_create_parser.parse_args()
-        if User.filter_by(username=args['username'].capitalize()).first():
+        if User.query.filter_by(username=args['username'].capitalize()).first():
             api.abort(400, "Username already exists.")
-        if User.filter_by(username=args['email']).first():
+        if User.query.filter_by(username=args['email']).first():
             api.abort(400, "Email already exists.")
         user = User(username=args['username'].capitalize(), email=args['email'])
         user.set_password(args['password'])
         db.session.add(user)
         db.session.commit()
-        return user, 201, {'Location': url_for(api.users_users_specific, username=user.username)}
+        return user, 201, {'Location': url_for('api.users_users_specific', username=user.username)}
 
 
 @api.route('/<username>')

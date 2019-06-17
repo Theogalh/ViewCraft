@@ -1,7 +1,6 @@
 from flask_restplus import Namespace, Resource
 from viewcraft.models.marshal import posts_public_fields
 from viewcraft.api.auth import token_auth
-from viewcraft.models.post import UserPost, GuildPost, RosterPost
 from flask import g
 
 api = Namespace('posts', description='Posts operations')

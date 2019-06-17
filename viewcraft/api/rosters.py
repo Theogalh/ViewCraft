@@ -1,4 +1,4 @@
-from flask import g, url_for
+from flask import g
 from viewcraft.models import Roster, Character
 from viewcraft.models.character import get_character
 from viewcraft import db

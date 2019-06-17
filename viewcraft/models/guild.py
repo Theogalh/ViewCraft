@@ -1,6 +1,6 @@
 from viewcraft import db, bnet
 from datetime import datetime
-from viewcraft.models.character import Character, get_character
+from viewcraft.models.character import get_character
 
 
 class Guild(db.Model):

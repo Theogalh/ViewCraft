@@ -1,8 +1,7 @@
 from viewcraft.api.auth import token_auth
 from flask_restplus import Namespace, Resource, fields
-from viewcraft.models.character import Character, get_character
+from viewcraft.models.character import get_character
 from viewcraft import db
-from viewcraft.api.errors import bad_request
 from viewcraft.models.marshal import character_public_fields, guilds_public_fields
 
 api = Namespace('characters', description='Characters operations')

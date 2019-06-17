@@ -7,7 +7,7 @@ from viewcraft import db
 api = Namespace('me', description='About me')
 
 me_private = api.model('Me', me_private_fields)
-me_private['rosters']= fields.List(fields.Nested(api.model('Roster', roster_public_fields)))
+me_private['rosters'] = fields.List(fields.Nested(api.model('Roster', roster_public_fields)))
 me_private['followed'] = fields.List(fields.Nested(api.model('User', user_public_fields)))
 me_private['followers'] = fields.List(fields.Nested(api.model('User', user_public_fields)))
 me_private['posts'] = fields.List(fields.Nested(api.model('Post', posts_public_fields)))
@@ -73,7 +73,7 @@ class MePassword(MeRessource):
 
 
 @api.route('/email')
-class MePassword(MeRessource):
+class MeEmail(MeRessource):
     @api.header('Authorization', 'Bearer', required=True)
     @api.doc(description='Change email')
     @api.response(403, 'Not Authorized')

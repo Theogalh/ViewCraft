@@ -1,7 +1,6 @@
 from viewcraft import db, bnet
 from viewcraft.data import CLASS, RACE
-from datetime import datetime, timedelta
-from time import time
+from datetime import datetime
 import requests
 
 

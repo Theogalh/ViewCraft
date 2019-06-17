@@ -1,8 +1,7 @@
-from conf import URL
+from viewcraft.cli.conf import URL
 import requests
 from requests.auth import HTTPBasicAuth
 from getpass import getpass
-import os
 
 
 def subparser_install(subparser):

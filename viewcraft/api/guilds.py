@@ -1,4 +1,4 @@
-from flask import current_app, url_for
+from flask import current_app
 from viewcraft.models import Guild
 from viewcraft import bnet
 

@@ -44,4 +44,3 @@ def main():
     argument = parser.parse_args()
     argument.headers = {'Authorization': 'Bearer {}'.format(TOKEN)}
     argument.func(**vars(argument))
-
