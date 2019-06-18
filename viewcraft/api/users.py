@@ -3,6 +3,8 @@ from viewcraft.models import User
 from viewcraft import db
 from viewcraft.api.auth import token_auth
 from viewcraft.models.marshal import user_public_fields, posts_public_fields
+from viewcraft.data import email_re
+from viewcraft.utils import check_password_security
 from flask_restplus import Namespace, Resource, fields
 
 api = Namespace('users', description='Users operations')
@@ -49,9 +51,13 @@ class UsersRest(Resource):
     def post(self):
         # TODO Check le CAPTCHA
         args = user_create_parser.parse_args()
+        if not check_password_security(args['password']):
+            api.abort(400, 'Need a password more secure.')
+        if not email_re.match(args['email']):
+            api.abort(400, 'Email invalid.')
         if User.query.filter_by(username=args['username'].capitalize()).first():
             api.abort(400, "Username already exists.")
-        if User.query.filter_by(username=args['email']).first():
+        if User.query.filter_by(email=args['email']).first():
             api.abort(400, "Email already exists.")
         user = User(username=args['username'].capitalize(), email=args['email'])
         user.set_password(args['password'])
@@ -81,6 +87,8 @@ class UsersSpecific(UsersResource):
         user = User.query.filter_by(username=username.capitalize()).first_or_404()
         if user == g.current_user:
             api.abort(400, 'U can not follow yourself')
+        if g.current_user.is_following(user):
+            api.abort(400, 'You already following {}'.format(username))
         g.current_user.follow(user)
         db.session.commit()
         return 'You are following {}'.format(username), 200
@@ -93,6 +101,8 @@ class UsersSpecific(UsersResource):
         user = User.query.filter_by(username=username.capitalize()).first_or_404()
         if user == g.current_user:
             api.abort(400, 'You cannot unfollow yourself!')
+        if not g.current_user.is_following(user):
+            api.abort(400, 'You are not following {}'.format(username))
         g.current_user.unfollow(user)
         db.session.commit()
         return 'You are unfollowing {}!'.format(username), 200

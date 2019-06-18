@@ -1,6 +1,7 @@
 import unittest
 from viewcraft import create_app, db
 from viewcraft.config import Config
+from viewcraft.models import User
 import warnings
 
 with warnings.catch_warnings():
@@ -19,6 +20,12 @@ class TestCaseApi(unittest.TestCase):
         self.app_context.push()
         self.testapp = self.app.test_client()
         db.create_all()
+        user1 = User(username='Theotest', email='theotest@test.fr')
+        user1.set_password('1234AAA@')
+        user1.get_token()
+        self.headers = {'Authorization': 'Bearer {}'.format(user1.token)}
+        db.session.add(user1)
+        db.session.commit()
 
     def tearDown(self):
         db.session.remove()
