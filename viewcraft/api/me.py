@@ -1,6 +1,8 @@
 from flask_restplus import Namespace, fields, Resource
 from viewcraft.models.marshal import user_public_fields, roster_public_fields, posts_public_fields, me_private_fields
 from viewcraft.api.auth import token_auth
+from viewcraft.utils import check_password_security
+from viewcraft.data import email_re
 from flask import g
 from viewcraft import db
 
@@ -42,6 +44,7 @@ class MeRest(MeRessource):
     @api.header('Authorization', 'Bearer', required=True)
     @api.doc(description='Change some informations about me')
     @api.expect(me_infos_parser)
+    @api.marshal_with(me_private)
     def post(self):
         args = me_infos_parser.parse_args()
         g.current_user.about_me = args['about_me']
@@ -66,7 +69,8 @@ class MePassword(MeRessource):
         args = me_password_parser.parse_args()
         if not g.current_user.check_password(args['oldPassword']):
             api.abort(403, 'Old password incorrect')
-        # TODO Check la sécurité du password.
+        if not check_password_security(args['password']):
+            api.abort(400, 'Need a Password secure.')
         g.current_user.set_password(args['password'])
         db.session.commit()
         return 'Password change', 200
@@ -80,7 +84,10 @@ class MeEmail(MeRessource):
     @api.expect(me_email_parser)
     def post(self):
         args = me_email_parser.parse_args()
-        # TODO Check l'adresse email
+        if not email_re.match(args['email']):
+            api.abort(400, 'Email Invalid')
+        if g.current_user.email == args['email']:
+            api.abort(400, 'This is already your email.')
         g.current_user.email = args['email']
         db.session.commit()
         return 'Password change', 200
